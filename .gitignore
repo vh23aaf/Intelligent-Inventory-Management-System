@@ -1,0 +1,36 @@
+# Intelligent Inventory Management System
+
+Node modules and Python environments
+venv/
+env/
+*.pyc
+__pycache__/
+*.egg-info/
+
+# Django
+db.sqlite3
+*.db
+staticfiles/
+media/
+logs/
+
+# Environment
+.env
+.env.local
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/

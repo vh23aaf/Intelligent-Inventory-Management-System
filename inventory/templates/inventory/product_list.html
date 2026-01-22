@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Products - Inventory Management System{% endblock %}
+
+{% block content %}
+<style>
+    .product-table-wrapper {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table tbody tr {
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        box-shadow: inset 3px 0 0 #007bff;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+    
+    .table thead {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-weight: 600;
+        color: #2c3e50;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-action-group {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .filter-card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        background: #fff;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .filter-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+    
+    .header-section {
+        margin-bottom: 2rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        animation: fadeIn 0.4s ease;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #bdc3c7;
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+    
+    .stock-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    .stock-indicator.low {
+        background-color: #e74c3c;
+    }
+    
+    .stock-indicator.warning {
+        background-color: #f39c12;
+    }
+    
+    .stock-indicator.optimal {
+        background-color: #27ae60;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .page-link {
+        color: #3498db;
+        border-color: #e0e0e0;
+        transition: all 0.2s ease;
+    }
+    
+    .page-link:hover {
+        background-color: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row mb-5 header-section">
+        <div class="col-md-8">
+            <div>
+                <h1 class="mb-2"><i class="bi bi-box"></i> Products</h1>
+                <p class="text-muted">Manage your inventory items and track stock levels</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-end d-flex align-items-end">
+            <a href="{% url 'product_create' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted mb-2">Search</label>
+                            <input type="text" name="search" class="form-control" placeholder="Search by name or SKU..." value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-2">Category</label>
+                            <input type="text" name="category" class="form-control" placeholder="Filter by category..." value="{{ request.GET.category }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-2">Sort By</label>
+                            <select name="sort_by" class="form-select">
+                                <option value="">All Products</option>
+                                <option value="name" {% if request.GET.sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                                <option value="-updated_at" {% if request.GET.sort_by == '-updated_at' %}selected{% endif %}>Recently Updated</option>
+                                <option value="current_stock" {% if request.GET.sort_by == 'current_stock' %}selected{% endif %}>Low Stock First</option>
+                                <option value="-current_stock" {% if request.GET.sort_by == '-current_stock' %}selected{% endif %}>High Stock First</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="row">
+        <div class="col-12 product-table-wrapper">
+            {% if products %}
+                <div class="card" style="border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 25%;">Product Name</th>
+                                    <th style="width: 12%;">Category</th>
+                                    <th style="width: 10%;">SKU</th>
+                                    <th style="width: 10%;">Price</th>
+                                    <th style="width: 12%;">Stock</th>
+                                    <th style="width: 12%;">Reorder Point</th>
+                                    <th style="width: 12%;">Status</th>
+                                    <th style="width: 15%; text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                    <tr>
+                                        <td>
+                                            <strong class="text-dark">{{ product.name }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if product.category %}
+                                                <span class="badge bg-info text-dark">{{ product.category }}</span>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><small class="text-muted">{{ product.sku|default:"—" }}</small></td>
+                                        <td><strong>${{ product.price|floatformat:2 }}</strong></td>
+                                        <td>
+                                            <strong class="text-primary">{{ product.current_stock }}</strong>
+                                        </td>
+                                        <td><span class="text-muted">{{ product.reorder_point }}</span></td>
+                                        <td>
+                                            {% if product.current_stock <= product.reorder_point %}
+                                                <span class="stock-indicator low"></span><span class="badge bg-danger">Low Stock</span>
+                                            {% elif product.current_stock > product.reorder_point|add:50 %}
+                                                <span class="stock-indicator warning"></span><span class="badge bg-warning text-dark">High Stock</span>
+                                            {% else %}
+                                                <span class="stock-indicator optimal"></span><span class="badge bg-success">Optimal</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div class="btn-action-group justify-content-center">
+                                                <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-info" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'product_delete' product.id %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Page navigation" class="d-flex justify-content-center">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" title="First page">
+                                        <i class="bi bi-chevron-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" title="Last page">
+                                        <i class="bi bi-chevron-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="card border-0 empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h3 class="text-muted">No products found</h3>
+                    <p class="text-muted mb-3">Start by creating your first product or adjust your filters</p>
+                    <a href="{% url 'product_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create First Product
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

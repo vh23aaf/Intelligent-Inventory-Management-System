@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Sales History - Inventory Management System{% endblock %}
+
+{% block content %}
+<style>
+    .sales-table-wrapper {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        box-shadow: inset 3px 0 0 #28a745;
+        transform: translateX(2px);
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+    
+    .table thead {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-weight: 600;
+        color: #2c3e50;
+        letter-spacing: 0.5px;
+    }
+    
+    .filter-card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        background: #fff;
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .filter-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .header-section {
+        margin-bottom: 2rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        animation: fadeIn 0.4s ease;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #bdc3c7;
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+    
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        animation: slideUp 0.4s ease;
+    }
+    
+    .summary-card:nth-child(2) {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .summary-card:nth-child(3) {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .summary-card h6 {
+        opacity: 0.9;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    .summary-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+        animation: slideUp 0.3s ease;
+    }
+    
+    .page-link {
+        color: #28a745;
+        border-color: #e0e0e0;
+        transition: all 0.2s ease;
+    }
+    
+    .page-link:hover {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    
+    .revenue-highlight {
+        background: linear-gradient(90deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.35rem;
+        color: #155724;
+        font-weight: 600;
+    }
+    
+    .product-link {
+        color: #3498db;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .product-link:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+    
+    .date-badge {
+        background-color: #f8f9fa;
+        padding: 0.35rem 0.65rem;
+        border-radius: 0.35rem;
+        font-weight: 500;
+        color: #495057;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row mb-5 header-section">
+        <div class="col-md-8">
+            <div>
+                <h1 class="mb-2"><i class="bi bi-clock-history"></i> Sales History</h1>
+                <p class="text-muted">Track and analyze all your sales transactions</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-end d-flex align-items-end">
+            <a href="{% url 'sales_entry' %}" class="btn btn-success btn-lg">
+                <i class="bi bi-plus-circle"></i> Record Sale
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-9">
+                            <label class="form-label small text-muted mb-2">Filter by Product</label>
+                            <select name="product" class="form-select">
+                                <option value="">All Products</option>
+                                {% for product in products %}
+                                    <option value="{{ product.id }}" {% if request.GET.product|stringformat:"s" == product.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ product.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="row">
+        <div class="col-12 sales-table-wrapper">
+            {% if sales %}
+                <div class="card" style="border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 15%;">Date</th>
+                                    <th style="width: 30%;">Product</th>
+                                    <th style="width: 15%;">Quantity</th>
+                                    <th style="width: 15%;">Unit Price</th>
+                                    <th style="width: 15%;">Revenue</th>
+                                    <th style="width: 10%; text-align: right;">Recorded</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in sales %}
+                                    <tr>
+                                        <td>
+                                            <span class="date-badge">{{ sale.sale_date }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'product_detail' sale.product.id %}" class="product-link text-decoration-none">
+                                                {{ sale.product.name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span style="background-color: #e8f4f8; padding: 0.35rem 0.65rem; border-radius: 0.35rem; font-weight: 500;">
+                                                {{ sale.quantity_sold }} units
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong>${{ sale.product.price|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="revenue-highlight">${{ sale.revenue|floatformat:2 }}</span>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <small class="text-muted">{{ sale.created_at|date:"M d" }}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Page navigation" class="d-flex justify-content-center">
+                        <ul class="pagination">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" title="First page">
+                                        <i class="bi bi-chevron-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" title="Last page">
+                                        <i class="bi bi-chevron-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+                <!-- Summary Stats -->
+                <div class="row mt-5">
+                    <div class="col-md-4 mb-3">
+                        <div class="card summary-card">
+                            <div class="card-body text-center py-4">
+                                <h6>Total Transactions</h6>
+                                <h3>{{ paginator.count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card summary-card">
+                            <div class="card-body text-center py-4">
+                                <h6>Total Units Sold</h6>
+                                <h3>{{ sales|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card summary-card">
+                            <div class="card-body text-center py-4">
+                                <h6>Quick Action</h6>
+                                <p class="mb-0 mt-2">
+                                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light">
+                                        <i class="bi bi-arrow-left"></i> Dashboard
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h3 class="text-muted">No sales recorded yet</h3>
+                    <p class="text-muted mb-3">Start tracking your sales to see them here</p>
+                    <a href="{% url 'sales_entry' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Record First Sale
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

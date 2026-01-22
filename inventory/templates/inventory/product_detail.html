@@ -1,0 +1,589 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Inventory Management System{% endblock %}
+
+{% block content %}
+<style>
+    .detail-container {
+        animation: fadeIn 0.4s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card {
+        border: none;
+        border-radius: 0.75rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+        animation: slideUp 0.4s ease;
+    }
+    
+    .card:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+    
+    .card:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-bottom: 1px solid #e0e0e0;
+        padding: 1.25rem;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+    
+    .card-header h5 {
+        color: #2c3e50;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .header-section {
+        margin-bottom: 2rem;
+        animation: slideDown 0.4s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .info-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-value {
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .stock-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        animation: scaleIn 0.4s ease;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .stock-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stock-card h6 {
+        opacity: 0.9;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stock-card h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .stock-card:nth-child(2) {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .progress {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        height: 28px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        transition: width 0.6s ease;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        box-shadow: inset 3px 0 0 #3498db;
+    }
+    
+    .table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+    
+    .table thead {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .badge {
+        padding: 0.5rem 0.75rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        transition: all 0.2s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .alert {
+        border-left: 4px solid;
+        border-radius: 0.5rem;
+        animation: slideInAlert 0.3s ease;
+    }
+    
+    @keyframes slideInAlert {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .alert-danger {
+        border-left-color: #e74c3c;
+        background-color: #fadbd8;
+        color: #922b21;
+    }
+    
+    .alert-warning {
+        border-left-color: #f39c12;
+        background-color: #fdebd0;
+        color: #7d6608;
+    }
+    
+    .alert-info {
+        border-left-color: #3498db;
+        background-color: #d6eaf8;
+        color: #1b4965;
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+    }
+    
+    dl.row {
+        margin-bottom: 0;
+    }
+    
+    dl.row dt {
+        color: #7f8c8d;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    dl.row dd {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .back-button {
+        margin-top: 2rem;
+        animation: fadeIn 0.4s ease;
+    }
+</style>
+
+<div class="container-fluid detail-container">
+    <div class="row mb-5 header-section">
+        <div class="col-md-8">
+            <h1 class="mb-2"><i class="bi bi-box"></i> {{ product.name }}</h1>
+            {% if product.category %}
+                <span class="badge bg-info text-dark">{{ product.category }}</span>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="action-buttons justify-content-end">
+                <a href="{% url 'product_update' product.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'product_delete' product.id %}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Product Info -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Product Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">SKU</p>
+                            <p class="info-value">{{ product.sku|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">Category</p>
+                            <p class="info-value">{{ product.category|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">Unit Price</p>
+                            <p class="info-value text-success">${{ product.price|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <p class="info-label">Lead Time</p>
+                            <p class="info-value">{{ product.lead_time_days }} days</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <p class="info-label">Created</p>
+                            <p class="info-value small">{{ product.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="info-label">Updated</p>
+                            <p class="info-value small">{{ product.updated_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Info -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Stock Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="stock-card">
+                                <h6>Current Stock</h6>
+                                <h2>{{ product.current_stock }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stock-card">
+                                <h6>Reorder Point</h6>
+                                <h2>{{ product.reorder_point }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="info-label">Stock Level Progress</p>
+                    <div class="progress mb-4">
+                        {% widthratio product.current_stock product.reorder_point|add:50 100 as stock_percentage %}
+                        <div class="progress-bar {% if product.current_stock <= product.reorder_point %}bg-danger{% elif product.current_stock > product.reorder_point|add:50 %}bg-warning{% else %}bg-success{% endif %}" 
+                             role="progressbar" 
+                             style="width: {% if stock_percentage > 100 %}100{% else %}{{ stock_percentage }}{% endif %}%"
+                             aria-valuenow="{{ product.current_stock }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="{{ product.reorder_point|add:50 }}">
+                            {{ stock_percentage }}%
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <p class="info-label">Safety Stock</p>
+                            <p class="info-value">{{ product.safety_stock }}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <p class="info-label">Status</p>
+                            <p class="info-value">
+                                {% if product.get_reorder_recommendation %}
+                                    <span class="badge bg-danger">Needs Reorder</span>
+                                {% elif product.current_stock > product.reorder_point|add:50 %}
+                                    <span class="badge bg-warning text-dark">High Stock</span>
+                                {% else %}
+                                    <span class="badge bg-success">Optimal</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Sales -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Recent Sales (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_sales %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Quantity</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in recent_sales %}
+                                        <tr>
+                                            <td><small>{{ sale.sale_date }}</small></td>
+                                            <td><strong>{{ sale.quantity_sold }}</strong> units</td>
+                                            <td><span style="background: rgba(40, 167, 69, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.3rem; color: #155724; font-weight: 600;">${{ sale.revenue|floatformat:2 }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                            <br>No sales recorded yet
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Demand Forecasts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Demand Forecasts</h5>
+                </div>
+                <div class="card-body">
+                    {% if forecasts %}
+                        <div style="position: relative; height: 280px; margin-bottom: 1.5rem;">
+                            <canvas id="forecastChart"></canvas>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Predicted</th>
+                                        <th>Model</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for forecast in forecasts %}
+                                        <tr>
+                                            <td><small>{{ forecast.forecast_date }}</small></td>
+                                            <td><strong>{{ forecast.predicted_demand|floatformat:1 }}</strong> units</td>
+                                            <td><small class="text-muted">{{ forecast.get_model_used_display }}</small></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            <i class="bi bi-graph-up" style="font-size: 2rem; opacity: 0.5;"></i>
+                            <br>No forecasts available yet
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Alerts -->
+    {% if alerts %}
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="card border-0">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Active Alerts ({{ alerts|length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for alert in alerts %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="alert alert-{% if alert.risk_level == 'high' %}danger{% elif alert.risk_level == 'medium' %}warning{% else %}info{% endif %} mb-0" role="alert">
+                                        <h6 class="alert-heading mb-2">
+                                            <strong>{{ alert.get_alert_type_display }}</strong>
+                                            <span class="badge bg-{% if alert.risk_level == 'high' %}danger{% elif alert.risk_level == 'medium' %}warning{% else %}info{% endif %}" style="float: right;">{{ alert.get_risk_level_display }}</span>
+                                        </h6>
+                                        <p class="mb-1">{{ alert.explanation }}</p>
+                                        <small>Generated: {{ alert.generated_at|date:"M d, Y H:i" }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="back-button">
+        <a href="{% url 'product_list' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Back to Products
+        </a>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Demand Forecast Chart
+    const forecastCanvas = document.getElementById('forecastChart');
+    if (forecastCanvas) {
+        const forecastCtx = forecastCanvas.getContext('2d');
+        new Chart(forecastCtx, {
+            type: 'line',
+            data: {
+                labels: {{ forecast_dates_json|safe }},
+                datasets: [{
+                    label: 'Predicted Demand',
+                    data: {{ forecast_values_json|safe }},
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#3498db',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: '#2980b9',
+                    segment: {
+                        borderDash: [5, 5]
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 12, weight: 600 },
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Predicted: ' + Math.round(context.parsed.y) + ' units';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function(value) {
+                                return Math.round(value);
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Predicted Units'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
