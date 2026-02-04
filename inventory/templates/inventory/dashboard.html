@@ -1,39 +1,319 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Inventory Management System{% endblock %}
+{% block title %}AI Prediction Dashboard - Inventory Management System{% endblock %}
 
 {% block content %}
 <style>
+    :root {
+        --color-primary: #667eea;
+        --color-secondary: #764ba2;
+        --color-success: #27ae60;
+        --color-warning: #f39c12;
+        --color-danger: #e74c3c;
+        --color-info: #16a085;
+        --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Card Base Styling */
+    .card {
+        border: none;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        border-radius: 0.75rem;
+    }
+
+    .card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background-color: #fafbfc;
+        font-weight: 600;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    /* Metric Card - Primary */
+    .metric-card {
+        padding: 1.5rem;
+        text-align: center;
+        border-radius: 0.75rem;
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-4px);
+    }
+
+    .metric-card .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .metric-card .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .metric-card .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.2;
+    }
+
+    /* Hero Section */
+    .dashboard-hero {
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-hero h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-hero p {
+        opacity: 0.95;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .hero-stat {
+        text-align: center;
+    }
+
+    .hero-stat h5 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .hero-stat p {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    /* Chart Container */
     .chart-container {
         position: relative;
-        height: 280px;
+        height: 300px;
         margin-bottom: 1rem;
     }
-    
+
     .chart-container-small {
         position: relative;
         height: 250px;
         margin-bottom: 1rem;
     }
-    
-    .card {
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        transition: box-shadow 0.3s ease;
+
+    /* Forecast Card */
+    .forecast-card {
+        border-left: 5px solid var(--color-primary);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
     }
-    
-    .card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+    .forecast-card:hover {
+        background: #f0f1f5;
+        transform: translateX(4px);
+    }
+
+    .forecast-card.critical {
+        border-left-color: var(--color-danger);
+        background: rgba(231, 76, 60, 0.05);
+    }
+
+    .forecast-card.warning {
+        border-left-color: var(--color-warning);
+        background: rgba(243, 156, 18, 0.05);
+    }
+
+    .forecast-card.safe {
+        border-left-color: var(--color-success);
+        background: rgba(39, 174, 96, 0.05);
+    }
+
+    .forecast-card .product-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #1f2937;
+    }
+
+    .forecast-card .product-category {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+    }
+
+    .forecast-stat {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .forecast-stat:last-child {
+        border-bottom: none;
+    }
+
+    .forecast-stat-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .forecast-stat-value {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    /* Risk Badge */
+    .risk-badge {
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .risk-badge.critical {
+        background-color: rgba(231, 76, 60, 0.15);
+        color: var(--color-danger);
+    }
+
+    .risk-badge.warning {
+        background-color: rgba(243, 156, 18, 0.15);
+        color: var(--color-warning);
+    }
+
+    .risk-badge.safe {
+        background-color: rgba(39, 174, 96, 0.15);
+        color: var(--color-success);
+    }
+
+    /* Alert Card */
+    .alert-item {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid;
+        background: #f8f9fa;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .alert-item:hover {
+        background: #f0f1f5;
+    }
+
+    .alert-item.danger {
+        border-left-color: var(--color-danger);
+    }
+
+    .alert-item.warning {
+        border-left-color: var(--color-warning);
+    }
+
+    .alert-item-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .alert-item-desc {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: var(--color-primary);
+    }
+
+    /* Grid Sections */
+    .dashboard-section {
+        margin-bottom: 2.5rem;
+    }
+
+    /* Model Badge */
+    .model-info-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    /* Color Variations for Cards */
+    .card.card-primary { border-top: 3px solid var(--color-primary); }
+    .card.card-success { border-top: 3px solid var(--color-success); }
+    .card.card-warning { border-top: 3px solid var(--color-warning); }
+    .card.card-danger { border-top: 3px solid var(--color-danger); }
+
+    /* Responsive Grid */
+    @media (max-width: 768px) {
+        .hero-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .metric-card .metric-value {
+            font-size: 1.8rem;
+        }
     }
 </style>
 
 <div class="container-fluid">
+    <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
-            <p class="text-muted">Welcome, {{ user.first_name|default:user.username }}! Here's your inventory overview.</p>
+            <div>
+                <h1 style="font-size: 2.2rem; font-weight: 700; color: #1f2937; margin-bottom: 0.25rem;">
+                    <i class="bi bi-robot"></i> Inventory Dashboard
+                </h1>
+                <p class="text-muted" style="font-size: 1rem;">AI-Powered demand forecasting & intelligent inventory management</p>
+            </div>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{% url 'product_create' %}" class="btn btn-primary">
+        <div class="col-md-4 text-end pt-2">
+            <a href="{% url 'product_create' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none;">
                 <i class="bi bi-plus-circle"></i> Add Product
             </a>
             <a href="{% url 'sales_entry' %}" class="btn btn-success">
@@ -42,259 +322,345 @@
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2">Total Products</p>
-                            <h3 class="mb-0">{{ total_products }}</h3>
+    <!-- HERO SECTION: Key Metrics -->
+    <div class="dashboard-hero mb-5">
+        <h2><i class="bi bi-lightning-charge"></i> 7-Day Forecast Summary</h2>
+        <p>AI-powered predictions to guide your inventory decisions</p>
+        
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <h5>{{ total_predicted_demand_7d|floatformat:0 }}</h5>
+                <p>Units Predicted</p>
+            </div>
+            <div class="hero-stat">
+                <h5>{{ avg_forecast_confidence|floatformat:0 }}%</h5>
+                <p>Model Confidence</p>
+            </div>
+            <div class="hero-stat">
+                <h5>{{ forecasts_7d_count }}</h5>
+                <p>Products Tracked</p>
+            </div>
+            <div class="hero-stat">
+                <h5>{{ best_model_mae|floatformat:3 }}</h5>
+                <p>Prediction Error</p>
+            </div>
+        </div>
+
+        {% if best_model_loaded %}
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
+            <div class="model-info-badge">
+                ✓ {{ best_model_name }} Model • R² {{ best_model_r2|floatformat:3 }} • {{ best_model_trained_on }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SECTION 1: Key Status Metrics -->
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-speedometer2"></i> Inventory Status</h3>
+        <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-boxes"></i></div>
+                    <div class="metric-value">{{ total_products }}</div>
+                    <p class="metric-label">Total Products</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div class="metric-value">{{ reorder_count }}</div>
+                    <p class="metric-label">Needs Reorder</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-shield-exclamation"></i></div>
+                    <div class="metric-value">{{ total_high_risk }}</div>
+                    <p class="metric-label">High Risk Items</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-graph-up"></i></div>
+                    <div class="metric-value">{{ monthly_sales_volume }}</div>
+                    <p class="metric-label">This Month Sales</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Forecast Charts -->
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-graph-up-arrow"></i> Demand & Sales Analytics</h3>
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> 14-Day Demand Forecast</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="forecastChart"></canvas>
                         </div>
-                        <i class="bi bi-box" style="font-size: 2rem; color: #3498db; opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Sales by Category</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container-small">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2">Needs Reorder</p>
-                            <h3 class="mb-0">{{ reorder_count }}</h3>
+        <div class="row g-3 mt-3">
+            <div class="col-lg-6">
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-calendar-range"></i> 30-Day Sales Trend</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container-small">
+                            <canvas id="salesTrendChart"></canvas>
                         </div>
-                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #f39c12; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2">High Risk</p>
-                            <h3 class="mb-0">{{ total_high_risk }}</h3>
-                        </div>
-                        <i class="bi bi-shield-exclamation" style="font-size: 2rem; color: #e74c3c; opacity: 0.5;"></i>
+            <div class="col-lg-6">
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-tags"></i> Top Performing Products</h5>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2">This Month Sales</p>
-                            <h3 class="mb-0">{{ monthly_sales_volume }}</h3>
+                    <div class="card-body">
+                        <div class="chart-container-small">
+                            <canvas id="categoryChart2"></canvas>
                         </div>
-                        <i class="bi bi-graph-up" style="font-size: 2rem; color: #27ae60; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row 1 -->
-    <div class="row mb-4">
-        <!-- Sales Trend Chart -->
-        <div class="col-lg-8 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Sales Trend (30 Days)</h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="salesTrendChart"></canvas>
-                    </div>
-                </div>
+    <!-- SECTION 3: Product-Level Predictions -->
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-lightning-charge"></i> Product Predictions & Stock Analysis</h3>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">7-Day Inventory Forecast by Product</h5>
             </div>
-        </div>
-
-        <!-- Category Distribution Chart -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Sales by Category</h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container-small">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row 2 -->
-    <div class="row mb-4">
-        <!-- Top Products Chart -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-star"></i> Top 5 Selling Products</h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container-small">
-                        <canvas id="topProductsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stock Levels by Category -->
-        <div class="col-lg-8 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-boxes"></i> Stock Levels by Category</h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="stockCategoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- High Risk Alerts -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> High Risk Alerts</h5>
-                </div>
-                <div class="card-body">
-                    {% if high_risk_alerts %}
-                        <div class="list-group">
-                            {% for alert in high_risk_alerts|slice:":5" %}
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">{{ alert.product.name }}</h6>
-                                            <p class="mb-0 small text-muted">{{ alert.explanation|truncatewords:15 }}</p>
-                                        </div>
-                                        <span class="badge badge-high">{{ alert.get_alert_type_display }}</span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center py-3">No high-risk alerts. Great job!</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Products Needing Reorder -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Reorder Needed</h5>
-                </div>
-                <div class="card-body">
-                    {% if reorder_needed %}
-                        <div class="list-group">
-                            {% for product in reorder_needed|slice:":5" %}
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">{{ product.name }}</h6>
-                                            <small class="text-muted">Stock: {{ product.current_stock }} / Reorder Point: {{ product.reorder_point }}</small>
-                                        </div>
-                                        <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center py-3">All products are well-stocked!</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Sales Activity -->
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Sales Activity</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_sales %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>Date</th>
-                                        <th>Revenue</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for sale in recent_sales %}
-                                        <tr>
-                                            <td>
-                                                <strong>{{ sale.product.name }}</strong>
-                                            </td>
-                                            <td>{{ sale.quantity_sold }} units</td>
-                                            <td><small class="text-muted">{{ sale.sale_date }}</small></td>
-                                            <td><strong>${{ sale.revenue|floatformat:2 }}</strong></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center py-3">No sales recorded yet. Start by <a href="{% url 'sales_entry' %}">recording a sale</a>.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
-                </div>
-                <div class="card-body">
+            <div class="card-body">
+                {% if product_forecasts %}
                     <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <a href="{% url 'product_create' %}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-plus-circle"></i> Add New Product
-                            </a>
+                        {% for forecast in product_forecasts|slice:":8" %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="forecast-card {{ forecast.risk }}">
+                                <div class="product-name"><i class="bi bi-box"></i> {{ forecast.product.name }}</div>
+                                <div class="product-category">{{ forecast.product.category }}</div>
+                                
+                                <div class="forecast-stat">
+                                    <span class="forecast-stat-label">Predicted (7d)</span>
+                                    <span class="forecast-stat-value">{{ forecast.predicted_demand_7d|floatformat:0 }} u</span>
+                                </div>
+                                <div class="forecast-stat">
+                                    <span class="forecast-stat-label">Current Stock</span>
+                                    <span class="forecast-stat-value">{{ forecast.current_stock }} u</span>
+                                </div>
+                                <div class="forecast-stat">
+                                    <span class="forecast-stat-label">Days Runway</span>
+                                    <span class="forecast-stat-value">
+                                        {% if forecast.days_until_stockout >= 999 %}
+                                            ∞
+                                        {% else %}
+                                            {{ forecast.days_until_stockout|floatformat:1 }}d
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.08);">
+                                    <span class="risk-badge {{ forecast.risk }}">
+                                        {% if forecast.risk == 'critical' %}
+                                            <i class="bi bi-exclamation-circle"></i> Critical
+                                        {% elif forecast.risk == 'warning' %}
+                                            <i class="bi bi-exclamation-triangle"></i> Warning
+                                        {% else %}
+                                            <i class="bi bi-check-circle"></i> Safe
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100">
-                                <i class="bi bi-box"></i> View All Products
-                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">No forecasts available. Add products and sales data to generate predictions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Alerts & Actions -->
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-exclamation-triangle"></i> Alerts & Recommendations</h3>
+        <div class="row g-3">
+            <!-- High Risk Alerts -->
+            <div class="col-lg-6">
+                <div class="card card-danger">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> High Risk Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if high_risk_alerts %}
+                            {% for alert in high_risk_alerts|slice:":5" %}
+                                <div class="alert-item danger">
+                                    <div class="alert-item-title">{{ alert.product.name }}</div>
+                                    <p class="alert-item-desc">{{ alert.explanation|truncatewords:12 }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-3"><i class="bi bi-check-circle"></i> No high-risk alerts</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reorder Recommendations -->
+            <div class="col-lg-6">
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Reorder Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if reorder_needed %}
+                            {% for product in reorder_needed|slice:":5" %}
+                                <div class="alert-item warning">
+                                    <div class="alert-item-title">{{ product.name }}</div>
+                                    <p class="alert-item-desc">Stock: {{ product.current_stock }} / Reorder at: {{ product.reorder_point }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-3"><i class="bi bi-check-circle"></i> All items well-stocked</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: Recent Activity -->
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-clock-history"></i> Recent Sales Activity</h3>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Latest Transactions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Quantity</th>
+                                    <th>Date</th>
+                                    <th style="text-align: right;">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales|slice:":10" %}
+                                    <tr>
+                                        <td><strong>{{ sale.product.name }}</strong></td>
+                                        <td><span class="badge bg-light text-dark">{{ sale.product.category }}</span></td>
+                                        <td>{{ sale.quantity_sold }} units</td>
+                                        <td><small class="text-muted">{{ sale.sale_date|date:"M d" }}</small></td>
+                                        <td style="text-align: right;"><strong>${{ sale.revenue|floatformat:2 }}</strong></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">No sales recorded. <a href="{% url 'sales_entry' %}">Start recording sales</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: Model Performance -->
+    {% if best_model_loaded %}
+    <div class="dashboard-section">
+        <h3 class="section-title"><i class="bi bi-trophy"></i> AI Model Performance</h3>
+        <div class="card card-primary">
+            <div class="card-header">
+                <h5 class="mb-0">Production Model Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700; color: #667eea;">{{ best_model_name|slice:":3" }}</div>
+                            <p class="text-muted" style="font-size: 0.85rem;">{{ best_model_name }} Regression</p>
                         </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{% url 'sales_entry' %}" class="btn btn-outline-success w-100">
-                                <i class="bi bi-graph-up"></i> Record Sales
-                            </a>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700; color: #27ae60;">{{ best_model_r2|floatformat:3 }}</div>
+                            <p class="text-muted" style="font-size: 0.85rem;">R² Score</p>
                         </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{% url 'sales_history' %}" class="btn btn-outline-info w-100">
-                                <i class="bi bi-clock-history"></i> Sales History
-                            </a>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700; color: #f39c12;">{{ best_model_mae|floatformat:4 }}</div>
+                            <p class="text-muted" style="font-size: 0.85rem;">Mean Absolute Error</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700; color: #e74c3c;">{{ best_model_rmse|floatformat:4 }}</div>
+                            <p class="text-muted" style="font-size: 0.85rem;">RMSE</p>
                         </div>
                     </div>
                 </div>
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 0.5rem;">
+                    <small class="text-muted">
+                        <strong>Training Info:</strong> {{ best_model_trained_on }} • Trained on 372 sales records • Updated regularly
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SECTION 7: Quick Actions -->
+    <div class="dashboard-section mb-4">
+        <h3 class="section-title"><i class="bi bi-lightning"></i> Quick Actions</h3>
+        <div class="row g-2">
+            <div class="col-sm-6 col-lg-3">
+                <a href="{% url 'product_create' %}" class="btn btn-outline-primary w-100 py-2">
+                    <i class="bi bi-plus-circle"></i> Add Product
+                </a>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100 py-2">
+                    <i class="bi bi-box"></i> View Products
+                </a>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <a href="{% url 'sales_entry' %}" class="btn btn-outline-success w-100 py-2">
+                    <i class="bi bi-graph-up"></i> Record Sales
+                </a>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <a href="{% url 'sales_history' %}" class="btn btn-outline-info w-100 py-2">
+                    <i class="bi bi-clock-history"></i> Sales History
+                </a>
             </div>
         </div>
     </div>
@@ -303,7 +669,6 @@
 <!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Chart color palette
     const chartColors = {
         primary: '#3498db',
         success: '#27ae60',
@@ -311,14 +676,47 @@
         danger: '#e74c3c',
         info: '#16a085',
         light: '#ecf0f1',
-        dark: '#2c3e50'
+        dark: '#2c3e50',
+        purple: '#667eea'
     };
 
-    // Global chart options
     const chartDefaults = {
         responsive: true,
         maintainAspectRatio: false
     };
+
+    // 14-Day Forecast Chart
+    const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+    new Chart(forecastCtx, {
+        type: 'line',
+        data: {
+            labels: {{ forecast_14d_dates|safe }},
+            datasets: [{
+                label: 'Predicted Demand',
+                data: {{ forecast_14d_values|safe }},
+                borderColor: chartColors.purple,
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: chartColors.purple,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            plugins: {
+                legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
+                filler: { propagate: true }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Units' } }
+            }
+        }
+    });
 
     // Sales Trend Chart
     const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
@@ -352,7 +750,7 @@
         }
     });
 
-    // Category Distribution Chart
+    // Category Distribution Chart (for Sales by Category)
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
     new Chart(categoryCtx, {
         type: 'doughnut',
@@ -379,57 +777,45 @@
         }
     });
 
-    // Top Products Chart
-    const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-    new Chart(topProductsCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ top_products_names|safe }},
-            datasets: [{
-                label: 'Units Sold',
-                data: {{ top_products_quantities|safe }},
-                backgroundColor: chartColors.success,
-                borderColor: '#27ae60',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            ...chartDefaults,
-            plugins: {
-                legend: { display: false }
+    // Create second category chart for Top Products
+    const categoryCtx2 = document.getElementById('categoryChart2');
+    if (categoryCtx2) {
+        new Chart(categoryCtx2, {
+            type: 'bar',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    label: 'Sales Volume',
+                    data: {{ category_quantities|safe }},
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(39, 174, 96, 0.8)',
+                        'rgba(243, 156, 18, 0.8)',
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(22, 160, 133, 0.8)'
+                    ],
+                    borderColor: [
+                        chartColors.primary,
+                        chartColors.success,
+                        chartColors.warning,
+                        chartColors.danger,
+                        chartColors.info
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
             },
-            scales: {
-                x: { beginAtZero: true }
+            options: {
+                ...chartDefaults,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true }
+                }
             }
-        }
-    });
-
-    // Stock Levels by Category Chart
-    const stockCtx = document.getElementById('stockCategoryChart').getContext('2d');
-    new Chart(stockCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ stock_category_labels|safe }},
-            datasets: [{
-                label: 'Total Stock',
-                data: {{ stock_category_levels|safe }},
-                backgroundColor: chartColors.info,
-                borderColor: '#16a085',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            ...chartDefaults,
-            plugins: {
-                legend: { display: true, labels: { boxWidth: 12, font: { size: 12 } } }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
+        });
+    }
 </script>
 {% endblock %}

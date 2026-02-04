@@ -6,9 +6,11 @@ Placeholder views - will be implemented in Module 2 (Data Entry).
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
@@ -16,12 +18,24 @@ from django.contrib import messages
 
 from .models import Product, SalesRecord, DemandForecast, InventoryAlert
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, ProductForm, SalesEntryForm, ProductFilterForm
+from .model_loader import best_model_loader
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 # ==================== Authentication Views ====================
+
+class LoginView(DjangoLoginView):
+    """Custom login view with proper CSRF handling."""
+    template_name = 'inventory/login.html'
+    form_class = CustomAuthenticationForm
+    success_url = reverse_lazy('dashboard')
+    
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 class RegisterView(CreateView):
     """User registration view."""
@@ -145,6 +159,19 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             sale_date__gte=current_month_start
         ).aggregate(total=Sum('quantity_sold'))
         context['monthly_sales_volume'] = monthly_sales['total'] or 0
+        
+        # Add model loader status to context
+        context['model_loaded'] = best_model_loader.is_available()
+        model_info = best_model_loader.get_model_info()
+        if model_info:
+            context['best_model_loaded'] = True
+            context['best_model_name'] = model_info.get('name', 'Unknown')
+            context['best_model_mae'] = model_info.get('mae', 0)
+            context['best_model_rmse'] = model_info.get('rmse', 0)
+            context['best_model_r2'] = model_info.get('r2', 0)
+            context['best_model_trained_on'] = model_info.get('trained_on', 'Unknown')
+        else:
+            context['best_model_loaded'] = False
         
         return context
 

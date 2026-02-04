@@ -1,0 +1,9 @@
+{
+  "model_name": "Linear Regression",
+  "mae": 0.6088014809572165,
+  "rmse": 0.6612486693704956,
+  "r2": 0.9903427148113286,
+  "training_samples": 12,
+  "test_samples": 3,
+  "train_date": "2026-02-04 12:01:54.148978"
+}

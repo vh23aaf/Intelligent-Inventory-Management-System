@@ -17,6 +17,29 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
 
+# CSRF Configuration
+if DEBUG:
+    # In development, allow requests from both HTTP and HTTPS with wildcards
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'https://localhost:8000',
+        'https://127.0.0.1:8000',
+        'http://localhost:3000',
+        'https://localhost:3000',
+        'http://localhost',
+        'https://localhost',
+        'http://*.localhost:8000',
+        'https://*.localhost:8000',
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False for CSRF token to work in templates
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allows form submission from same site
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'inventory.middleware.ForwardedProtoMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -57,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.csrf',
             ],
         },
     },
